@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-contract AccountabilityContract {
+contract Accountability {
     struct Task {
         string description;
         bool isCompleted;
