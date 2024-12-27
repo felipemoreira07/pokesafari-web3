@@ -15,12 +15,13 @@ import {
 } from "thirdweb";
 import { contract, client } from "@/utils/constants";
 import { useActiveAccount } from "thirdweb/react";
-import { useAppStore } from "@/store";
+import { INewPokemon, IPokemon, useAppStore } from "@/store";
 import { useLoadingBar } from "react-top-loading-bar";
 import { useRouter } from "next/navigation";
 import { Pokeball } from "@/utils/enum/PokeBalls";
 import { sepolia } from "thirdweb/chains";
 import { toast, ToastContainer } from "react-toastify";
+import Image from "next/image";
 
 interface PokeballModalProps {
   open: boolean;
@@ -31,7 +32,7 @@ const POKEBALL_PRICE = "0.001 ether";
 const GREATBALL_PRICE = "0.002 ether";
 const ULTRABALL_PRICE = "0.005 ether";
 
-export default function PokeballModal(props: PokeballModalProps) {
+export default function CatchPokemonModal(props: PokeballModalProps) {
   const [pokeballType, setPokeballType] = useState<number>(1);
   const [quantity, setQuantity] = useState<number>(1);
   const router = useRouter();
@@ -42,43 +43,53 @@ export default function PokeballModal(props: PokeballModalProps) {
       color: "blue",
       height: 2,
     });
+  const randomPokemonId = Math.floor(Math.random() * 1025) + 1;
 
-  const addPokeballs = async () => {
-    console.log(account);
-    if (!account) return;
-    store.setLoading(true);
-    startLoadingBar();
-    console.log(toWei(Pokeball.getEtherPrice(pokeballType)));
-    const transaction = await prepareContractCall({
-      contract,
-      method:
-        "function addPokeballs(uint256 pokeball_type, uint256 quantity) payable",
-      params: [BigInt(pokeballType), BigInt(quantity)],
-      value: toWei(Pokeball.getEtherPrice(pokeballType)),
-    });
-    const { transactionHash } = await sendTransaction({
-      transaction,
-      account,
-    });
-    console.log(transactionHash);
-    const receipt = await waitForReceipt({
-      chain: sepolia,
-      client,
-      transactionHash,
-    });
-    console.log("receipt", receipt);
-    if (receipt.status === "success") {
-      toast.success(`${Pokeball.getLabel(pokeballType)} bought with success!!`);
-      store.setRefetchPokeball(pokeballType);
-    } else {
-      toast.error("Pokeball purchase failed;");
+  const getNewPokemon = async () => {
+    // fetch(`https://pokeapi.co/api/v2/pokemon/${randomPokemonId}`)
+    //   .then((data) => data.json())
+    //   .then((pokemon: INewPokemon) => {
+    //     store.setNewPokemon(pokemon);
+    //   });
+
+    try {
+      const response = await fetch(
+        `https://pokeapi.co/api/v2/pokemon/${randomPokemonId}`
+      );
+      const data: INewPokemon = await response.json();
+
+      // Filtra os dados relevantes
+      const filteredPokemon: IPokemon = {
+        name: data.name,
+        url: data.sprites.front_default,
+        moves: data.moves.map((move: { move: { name: string } }) => ({
+          name: move.move.name,
+          moveType: "normal",
+        })),
+        ability: data.abilities.map(
+          (ability: { ability: { name: string } }) => ability.ability.name
+        )[0],
+        types: data.types.map(
+          (type: { type: { name: string } }) => type.type.name
+        ),
+        weight: data.weight,
+        height: data.height,
+        captured_at: Date.now(),
+        id: randomPokemonId,
+        nickname: "",
+      };
+
+      // Atualiza o estado na store
+      store.setNewPokemon(filteredPokemon);
+      console.log(store.newPokemon);
+    } catch (error) {
+      console.error("Erro ao buscar Pokémon:", error);
     }
-    store.setLoading(false);
-    completeLoadingBar();
   };
 
   useEffect(() => {
     if (!account) router.push("/");
+    getNewPokemon();
   }, []);
 
   return (
@@ -101,56 +112,32 @@ export default function PokeballModal(props: PokeballModalProps) {
                     as="h3"
                     className="font-semibold text-2xl text-gray-900"
                   >
-                    PokeShop
+                    You encounter a Pokemon!
                   </DialogTitle>
-                  <div className="mt-5 text-md text-gray-500">
-                    <p>Buy some balls and go catch some pokes!</p>
-                    <p>
-                      Prices: 1 PokeBall - {POKEBALL_PRICE} / 1 GreatBall -{" "}
-                      {GREATBALL_PRICE} / 1 UltraBall - {ULTRABALL_PRICE}
-                    </p>
-
-                    <div className="flex gap-3 mt-5">
-                      <div>
-                        <p className="mb-1">Type</p>
-                        <select
-                          id="pokeballType"
-                          className="w-32 h-12 p-3 rounded-md bg-white text-red-500 font-semibold shadow-md outline-none focus:ring-2 focus:ring-red-300"
-                          value={pokeballType}
-                          onChange={(e) =>
-                            setPokeballType(Number(e.target.value))
-                          }
-                        >
-                          <option value={1}>Pokeball</option>
-                          <option value={2}>Greatball</option>
-                          <option value={3}>Ultraball</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <p className="mb-1">Quantity</p>
-                        <input
-                          id="quantity"
-                          type="number"
-                          min="1"
-                          className="w-32 h-12 p-3 rounded-md bg-white text-red-500 font-semibold shadow-md outline-none focus:ring-2 focus:ring-red-300"
-                          value={quantity}
-                          onChange={(e) => setQuantity(Number(e.target.value))}
-                        />
-                      </div>
+                  {store.newPokemon ? (
+                    <div className="mt-5 text-lg text-gray-500 flex flex-col items-center justify-center">
+                      <img
+                        alt={store.newPokemon.name}
+                        src={store.newPokemon.url}
+                        width={150}
+                        height={150}
+                      />
+                      <p>A wild {store.newPokemon.name} appeared!</p>
                     </div>
-                  </div>
+                  ) : (
+                    <div>...</div>
+                  )}
                 </div>
               </div>
             </div>
             <div className="bg-gray-50 px-8 pt-3 pb-8 flex flex-row-reverse">
               <button
                 type="button"
-                onClick={addPokeballs}
+                // onClick={addPokeballs}
                 className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-md font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto disabled:bg-gray-400"
                 disabled={store.isLoading}
               >
-                {store.isLoading ? "..." : "Buy"}
+                {store.isLoading ? "..." : "Capture"}
               </button>
               <button
                 type="button"
@@ -159,7 +146,7 @@ export default function PokeballModal(props: PokeballModalProps) {
                 className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-md font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
                 disabled={store.isLoading}
               >
-                {store.isLoading ? "..." : "Cancel"}
+                {store.isLoading ? "..." : "Run"}
               </button>
             </div>
           </DialogPanel>

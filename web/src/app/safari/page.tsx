@@ -1,39 +1,61 @@
 "use client";
 
+import CatchPokemonModal from "@/components/catch_pokemon_modal";
 import PokeballModal from "@/components/pokeball_modal";
+import { useAppStore } from "@/store";
 import { contract } from "@/utils/constants";
+import { Pokeball } from "@/utils/enum/PokeBalls";
 import Image from "next/image";
-import { useState } from "react";
-import { prepareContractCall } from "thirdweb";
+import { useEffect, useState } from "react";
+import { LoadingBarContainer } from "react-top-loading-bar";
 import { useReadContract } from "thirdweb/react";
 
 export default function Safari() {
   const [openPokeballModal, setOpenPokeballModal] = useState<boolean>(false);
+  const [catchPokeballModal, setCatchPokeballModal] = useState<boolean>(false);
+  const store = useAppStore();
 
-  const { data: pokeballs, isPending: isPendingPokeballs } = useReadContract({
+  const {
+    data: pokeballs,
+    refetch: refetchPokeball,
+    isPending: isPendingPokeballs,
+    isRefetching: isRefetchingPokeballs,
+  } = useReadContract({
     contract,
     method: "function getPokeballs() view returns (uint256)",
     params: [],
   });
 
-  const { data: greatballs, isPending: isPendingGreatballs } = useReadContract({
+  const {
+    data: greatballs,
+    refetch: refetchGreatball,
+    isPending: isPendingGreatballs,
+    isRefetching: isRefetchingGreatballs,
+  } = useReadContract({
     contract,
     method: "function getGreatballs() view returns (uint256)",
     params: [],
   });
 
-  const { data: ultraballs, isPending: isPendingUltraballs } = useReadContract({
+  const {
+    data: ultraballs,
+    refetch: refetchUltraball,
+    isPending: isPendingUltraballs,
+    isRefetching: isRefetchingUltraballs,
+  } = useReadContract({
     contract,
     method: "function getUltraballs() view returns (uint256)",
     params: [],
   });
 
-  // const transaction = prepareContractCall({
-  //   contract,
-  //   method:
-  //     "function addPokeballs(uint256 pokeball_type, uint256 quantity) payable",
-  //   params: [pokeball_type, quantity],
-  // });
+  useEffect(() => {
+    if (store.refetchPokeball) {
+      if (store.refetchPokeball === Pokeball.enum.Pokeball) refetchPokeball();
+      if (store.refetchPokeball === Pokeball.enum.GreatBall) refetchGreatball();
+      if (store.refetchPokeball === Pokeball.enum.UltraBall) refetchUltraball();
+      store.setRefetchPokeball(undefined);
+    }
+  }, [store.refetchPokeball]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 pb-20 font-[family-name:var(--font-poppins)]">
@@ -54,7 +76,9 @@ export default function Safari() {
             width={25}
             height={25}
           />
-          <p className="text-lg">{isPendingPokeballs ? "..." : pokeballs}</p>
+          <p className="text-lg">
+            {isPendingPokeballs || isRefetchingPokeballs ? "..." : pokeballs}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Image
@@ -63,7 +87,9 @@ export default function Safari() {
             width={25}
             height={25}
           />
-          <p className="text-lg">{isPendingGreatballs ? "..." : greatballs}</p>
+          <p className="text-lg">
+            {isPendingGreatballs || isRefetchingGreatballs ? "..." : greatballs}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Image
@@ -72,16 +98,12 @@ export default function Safari() {
             width={25}
             height={25}
           />
-          <p className="text-lg">{isPendingUltraballs ? "..." : ultraballs}</p>
+          <p className="text-lg">
+            {isPendingUltraballs || isRefetchingUltraballs ? "..." : ultraballs}
+          </p>
         </div>
       </div>
-      {/* <TransactionButton
-          transaction={() => increment}
-          onTransactionSent={() => console.log("incrementing...")}
-          onTransactionConfirmed={() => refetch()}
-        >
-          +
-        </TransactionButton> */}
+
       <div className="pt-5 flex gap-2">
         <button
           onClick={() => setOpenPokeballModal((prev) => !prev)}
@@ -90,13 +112,22 @@ export default function Safari() {
           Buy some pokeballs here
         </button>
         <button
-          onClick={() => setOpenPokeballModal((prev) => !prev)}
+          onClick={() => setCatchPokeballModal((prev) => !prev)}
           className="bg-white text-black font-semibold rounded-md px-5 py-3"
         >
           Try to catch a pokemon!
         </button>
       </div>
-      <PokeballModal open={openPokeballModal} setOpen={setOpenPokeballModal} />
+      <LoadingBarContainer>
+        <PokeballModal
+          open={openPokeballModal}
+          setOpen={setOpenPokeballModal}
+        />
+        <CatchPokemonModal
+          open={catchPokeballModal}
+          setOpen={setCatchPokeballModal}
+        />
+      </LoadingBarContainer>
     </div>
   );
 }

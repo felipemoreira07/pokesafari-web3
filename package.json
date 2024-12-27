@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@thirdweb-dev/contracts": "^3.8.0",
+    "react-toastify": "^11.0.2",
+    "react-top-loading-bar": "^3.0.2",
     "zksync-web3": "^0.14.3"
   }
 }

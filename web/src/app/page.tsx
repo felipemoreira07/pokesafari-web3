@@ -55,8 +55,11 @@ export default function Home() {
           client={client}
           chain={sepolia}
           connectModal={{ size: "wide" }}
-          onConnect={() => router.push("/safari")}
+          // onConnect={() => router.push("/safari")}
         />
+        {account && (
+          <button onClick={() => router.push("/safari")}>Go to Safari</button>
+        )}
       </main>
     </div>
   );
