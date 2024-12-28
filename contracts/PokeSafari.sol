@@ -42,7 +42,7 @@ contract PokeSafari {
     uint256 public constant GREATBALL_PRICE = 0.002 ether;
     uint256 public constant ULTRABALL_PRICE = 0.005 ether;
 
-    uint256 public constant POKEBALL_ACCURACY = 30;
+    uint256 public constant POKEBALL_ACCURACY = 30; //fails??
     uint256 public constant GREATBALL_ACCURACY = 50;
     uint256 public constant ULTRABALL_ACCURACY = 70;
 

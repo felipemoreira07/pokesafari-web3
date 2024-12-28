@@ -29,33 +29,50 @@ export interface INewPokemon {
 
 interface AppStateVariables {
   newPokemon: IPokemon | undefined;
+  selectedPokemon: IPokemon | undefined;
   teamPokemons: IPokemon[];
   refetchPokeball: number | undefined;
   isLoading: boolean;
 }
 
 interface AppStateActions {
-  setNewPokemon: (pokemon: IPokemon | undefined) => void;
+  setNewPokemon: (pokemon: IPokemon) => void;
+  resetNewPokemon: () => void;
+
+  setSelectedPokemon: (pokemon: IPokemon) => void;
+  resetSelectedPokemon: (pokemon: IPokemon) => void;
+
   addTeamPokemon: (pokemon: IPokemon) => void;
-  setRefetchPokeball: (val: number | undefined) => void;
+
+  setRefetchPokeball: (val: number) => void;
+  resetRefetchPokeball: () => void;
+
   setLoading: (val: boolean) => void;
 }
 
 export const useAppStore = create<AppStateVariables & AppStateActions>(
   (set) => ({
     newPokemon: undefined,
+    selectedPokemon: undefined,
     teamPokemons: [],
     refetchPokeball: undefined,
     isLoading: false,
 
-    setNewPokemon: (pokemon: IPokemon | undefined) =>
-      set(() => ({ newPokemon: pokemon })),
+    setNewPokemon: (pokemon: IPokemon) => set(() => ({ newPokemon: pokemon })),
+    resetNewPokemon: () => set(() => ({ newPokemon: undefined })),
+
+    setSelectedPokemon: (pokemon: IPokemon) =>
+      set(() => ({ selectedPokemon: pokemon })),
+    resetSelectedPokemon: () => set(() => ({ selectedPokemon: undefined })),
+
     addTeamPokemon: (pokemon) =>
       set((state) => ({
         teamPokemons: [...state.teamPokemons, pokemon],
       })),
-    setRefetchPokeball: (val: number | undefined) =>
-      set(() => ({ refetchPokeball: val })),
+
+    setRefetchPokeball: (val: number) => set(() => ({ refetchPokeball: val })),
+    resetRefetchPokeball: () => set(() => ({ refetchPokeball: undefined })),
+
     setLoading: (val: boolean) => set(() => ({ isLoading: val })),
   })
 );

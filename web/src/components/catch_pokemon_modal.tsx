@@ -22,19 +22,17 @@ import { Pokeball } from "@/utils/enum/PokeBalls";
 import { sepolia } from "thirdweb/chains";
 import { toast, ToastContainer } from "react-toastify";
 import Image from "next/image";
+import { getFilteredPokemon } from "@/utils/getFilteredPokemon";
+import { capitalizeFirstLetter } from "@/utils/capitalizeFirstLetter";
 
 interface PokeballModalProps {
   open: boolean;
   setOpen: (value: boolean) => void;
 }
 
-const POKEBALL_PRICE = "0.001 ether";
-const GREATBALL_PRICE = "0.002 ether";
-const ULTRABALL_PRICE = "0.005 ether";
-
 export default function CatchPokemonModal(props: PokeballModalProps) {
   const [pokeballType, setPokeballType] = useState<number>(1);
-  const [quantity, setQuantity] = useState<number>(1);
+  const [successCatch, setSuccessCatch] = useState<boolean>(false);
   const router = useRouter();
   const account = useActiveAccount();
   const store = useAppStore();
@@ -46,40 +44,12 @@ export default function CatchPokemonModal(props: PokeballModalProps) {
   const randomPokemonId = Math.floor(Math.random() * 1025) + 1;
 
   const getNewPokemon = async () => {
-    // fetch(`https://pokeapi.co/api/v2/pokemon/${randomPokemonId}`)
-    //   .then((data) => data.json())
-    //   .then((pokemon: INewPokemon) => {
-    //     store.setNewPokemon(pokemon);
-    //   });
-
     try {
       const response = await fetch(
         `https://pokeapi.co/api/v2/pokemon/${randomPokemonId}`
       );
       const data: INewPokemon = await response.json();
-
-      // Filtra os dados relevantes
-      const filteredPokemon: IPokemon = {
-        name: data.name,
-        url: data.sprites.front_default,
-        moves: data.moves.map((move: { move: { name: string } }) => ({
-          name: move.move.name,
-          moveType: "normal",
-        })),
-        ability: data.abilities.map(
-          (ability: { ability: { name: string } }) => ability.ability.name
-        )[0],
-        types: data.types.map(
-          (type: { type: { name: string } }) => type.type.name
-        ),
-        weight: data.weight,
-        height: data.height,
-        captured_at: Date.now(),
-        id: randomPokemonId,
-        nickname: "",
-      };
-
-      // Atualiza o estado na store
+      const filteredPokemon = getFilteredPokemon(data, randomPokemonId);
       store.setNewPokemon(filteredPokemon);
       console.log(store.newPokemon);
     } catch (error) {
@@ -87,10 +57,24 @@ export default function CatchPokemonModal(props: PokeballModalProps) {
     }
   };
 
+  const run = () => {
+    props.setOpen(false);
+    store.resetNewPokemon();
+  };
+
+  const catchPokemon = () => {
+    if (store.newPokemon) store.addTeamPokemon(store.newPokemon);
+    setSuccessCatch(true);
+    run();
+  };
+
   useEffect(() => {
     if (!account) router.push("/");
-    getNewPokemon();
   }, []);
+
+  useEffect(() => {
+    if (!store.newPokemon) getNewPokemon();
+  }, [store.newPokemon]);
 
   return (
     <Dialog open={props.open} onClose={props.setOpen} className="relative z-10">
@@ -100,41 +84,50 @@ export default function CatchPokemonModal(props: PokeballModalProps) {
       />
 
       <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-        <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div className="flex min-h-full items-center justify-center p-4 text-center">
           <DialogPanel
             transition
-            className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all data-[closed]:translate-y-4 data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in sm:my-8 sm:w-full sm:max-w-md data-[closed]:sm:translate-y-0 data-[closed]:sm:scale-95"
+            className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all data-[closed]:translate-y-4 data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in my-8 w-full max-w-md data-[closed]:translate-y-0 data-[closed]:scale-95"
           >
-            <div className="bg-white p-8">
-              <div className="sm:flex sm:items-start">
-                <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                  <DialogTitle
-                    as="h3"
-                    className="font-semibold text-2xl text-gray-900"
-                  >
-                    You encounter a Pokemon!
-                  </DialogTitle>
-                  {store.newPokemon ? (
-                    <div className="mt-5 text-lg text-gray-500 flex flex-col items-center justify-center">
-                      <img
-                        alt={store.newPokemon.name}
-                        src={store.newPokemon.url}
-                        width={150}
-                        height={150}
-                      />
-                      <p>A wild {store.newPokemon.name} appeared!</p>
-                    </div>
-                  ) : (
-                    <div>...</div>
-                  )}
+            <div className="bg-white p-8 flex flex-col items-center justify-center">
+              <DialogTitle
+                as="h3"
+                className="font-semibold text-2xl text-gray-900"
+              >
+                You encounter a Pokemon!
+              </DialogTitle>
+              {store.newPokemon ? (
+                <div className="mt-5 text-lg text-gray-500 flex flex-col items-center justify-center">
+                  <img
+                    alt={store.newPokemon.name}
+                    src={store.newPokemon.url}
+                    width={150}
+                    height={150}
+                  />
+                  <p>
+                    A wild {capitalizeFirstLetter(store.newPokemon.name)}{" "}
+                    appeared!
+                  </p>
                 </div>
-              </div>
+              ) : (
+                <div>...</div>
+              )}
             </div>
             <div className="bg-gray-50 px-8 pt-3 pb-8 flex flex-row-reverse">
+              <select
+                id="pokeballType"
+                className="w-32 p-3 rounded-md bg-white text-red-500 ml-3 font-semibold shadow-md outline-none focus:ring-2 focus:ring-red-300"
+                value={pokeballType}
+                onChange={(e) => setPokeballType(Number(e.target.value))}
+              >
+                <option value={1}>Pokeball</option>
+                <option value={2}>Greatball</option>
+                <option value={3}>Ultraball</option>
+              </select>
               <button
                 type="button"
-                // onClick={addPokeballs}
-                className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-md font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto disabled:bg-gray-400"
+                onClick={catchPokemon}
+                className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-md font-semibold text-white shadow-sm hover:bg-red-500 ml-3 w-auto disabled:bg-gray-400"
                 disabled={store.isLoading}
               >
                 {store.isLoading ? "..." : "Capture"}
@@ -142,8 +135,8 @@ export default function CatchPokemonModal(props: PokeballModalProps) {
               <button
                 type="button"
                 data-autofocus
-                onClick={() => props.setOpen(false)}
-                className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-md font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                onClick={() => run()}
+                className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-md font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 mt-0 w-auto"
                 disabled={store.isLoading}
               >
                 {store.isLoading ? "..." : "Run"}

@@ -53,7 +53,7 @@ export default function Safari() {
       if (store.refetchPokeball === Pokeball.enum.Pokeball) refetchPokeball();
       if (store.refetchPokeball === Pokeball.enum.GreatBall) refetchGreatball();
       if (store.refetchPokeball === Pokeball.enum.UltraBall) refetchUltraball();
-      store.setRefetchPokeball(undefined);
+      store.resetRefetchPokeball();
     }
   }, [store.refetchPokeball]);
 
@@ -118,6 +118,20 @@ export default function Safari() {
           Try to catch a pokemon!
         </button>
       </div>
+
+      <div className="flex gap-5 mt-5">
+        {store.teamPokemons.map((p) => (
+          <div
+            role="button"
+            key={p.nickname}
+            className="flex flex-col items-center justify-center bg-white rounded-lg p-4 cursor-pointer hover:bg-gray-200 active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <img alt={p.name} src={p.url} width={60} height={60} />
+            <p className="text-black">{p.nickname}</p>
+          </div>
+        ))}
+      </div>
+
       <LoadingBarContainer>
         <PokeballModal
           open={openPokeballModal}
