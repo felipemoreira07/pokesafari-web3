@@ -32,6 +32,7 @@ interface AppStateVariables {
   selectedPokemon: IPokemon | undefined;
   teamPokemons: IPokemon[];
   refetchPokeball: number | undefined;
+  refetchPokemons: "team" | "oak" | undefined;
   isLoading: boolean;
 }
 
@@ -47,6 +48,9 @@ interface AppStateActions {
   setRefetchPokeball: (val: number) => void;
   resetRefetchPokeball: () => void;
 
+  setRefetchPokemons: (val: "team" | "oak") => void;
+  resetRefetchPokemons: () => void;
+
   setLoading: (val: boolean) => void;
 }
 
@@ -56,6 +60,7 @@ export const useAppStore = create<AppStateVariables & AppStateActions>(
     selectedPokemon: undefined,
     teamPokemons: [],
     refetchPokeball: undefined,
+    refetchPokemons: undefined,
     isLoading: false,
 
     setNewPokemon: (pokemon: IPokemon) => set(() => ({ newPokemon: pokemon })),
@@ -72,6 +77,10 @@ export const useAppStore = create<AppStateVariables & AppStateActions>(
 
     setRefetchPokeball: (val: number) => set(() => ({ refetchPokeball: val })),
     resetRefetchPokeball: () => set(() => ({ refetchPokeball: undefined })),
+
+    setRefetchPokemons: (val: "team" | "oak") =>
+      set(() => ({ refetchPokemons: val })),
+    resetRefetchPokemons: () => set(() => ({ refetchPokemons: undefined })),
 
     setLoading: (val: boolean) => set(() => ({ isLoading: val })),
   })

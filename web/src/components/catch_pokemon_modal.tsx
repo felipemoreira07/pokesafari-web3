@@ -32,7 +32,6 @@ interface PokeballModalProps {
 
 export default function CatchPokemonModal(props: PokeballModalProps) {
   const [pokeballType, setPokeballType] = useState<number>(1);
-  const [successCatch, setSuccessCatch] = useState<boolean>(false);
   const router = useRouter();
   const account = useActiveAccount();
   const store = useAppStore();
@@ -62,9 +61,63 @@ export default function CatchPokemonModal(props: PokeballModalProps) {
     store.resetNewPokemon();
   };
 
-  const catchPokemon = () => {
-    if (store.newPokemon) store.addTeamPokemon(store.newPokemon);
-    setSuccessCatch(true);
+  const catchPokemon = async () => {
+    if (!account || !store.newPokemon) return;
+
+    const name = store.newPokemon.name;
+    const nickname = store.newPokemon.name;
+    const url = store.newPokemon.url;
+    const captured_at = BigInt(store.newPokemon.captured_at);
+    const types = store.newPokemon.types;
+    const ability = store.newPokemon.ability;
+    const weight = BigInt(store.newPokemon.weight);
+    const height = BigInt(store.newPokemon.height);
+    const moves = store.newPokemon.moves;
+    const pokeball_type = BigInt(pokeballType);
+    console.log(pokeball_type);
+    const catchAccuracy = BigInt(Math.floor(Math.random() * 100));
+
+    startLoadingBar();
+    const transaction = prepareContractCall({
+      contract,
+      method:
+        "function catchPokemon(string name, string nickname, string url, uint256 captured_at, string[] types, string ability, uint256 weight, uint256 height, (string name, string moveType)[] moves, uint256 pokeball_type, uint256 catchAccuracy)",
+      params: [
+        name,
+        nickname,
+        url,
+        captured_at,
+        types,
+        ability,
+        weight,
+        height,
+        moves,
+        pokeball_type,
+        catchAccuracy,
+      ],
+    });
+
+    const { transactionHash } = await sendTransaction({
+      transaction,
+      account,
+    });
+    console.log(transactionHash);
+
+    const receipt = await waitForReceipt({
+      chain: sepolia,
+      client,
+      transactionHash,
+    });
+    console.log("receipt", receipt);
+
+    if (receipt.status === "success") {
+      toast.success(`${store.newPokemon.name} caught with success!!`);
+      store.setRefetchPokemons("team");
+    } else {
+      toast.error("Pokemon ran away..");
+    }
+
+    completeLoadingBar();
     run();
   };
 

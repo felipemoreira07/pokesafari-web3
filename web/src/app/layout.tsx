@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PokeSafari",
+  title: "PokeSafari Web3",
   description: "A Safari for catching pokemons in the web 3!",
   icons: [{ rel: "icon", url: "/pokeball.svg" }],
 };

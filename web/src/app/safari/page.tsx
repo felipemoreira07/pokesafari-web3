@@ -48,12 +48,47 @@ export default function Safari() {
     params: [],
   });
 
+  const {
+    data: teamPokemons,
+    refetch: refetchTeamPokemons,
+    isPending: isPendingTeamPokemons,
+    isRefetching: isRefetchingTeamPokemons,
+  } = useReadContract({
+    contract,
+    method:
+      "function getAllPokemons() view returns ((string name, string nickname, string url, uint256 captured_at, string[] types, string ability, uint256 weight, uint256 height, (string name, string moveType)[] moves)[])",
+    params: [],
+  });
+
+  const {
+    data: teamOakPokemons,
+    refetch: refetchTeamOakPokemons,
+    isPending: isPendingTeamOakPokemons,
+    isRefetching: isRefetchingTeamOakPokemons,
+  } = useReadContract({
+    contract,
+    method:
+      "function getAllOakPokemons() view returns ((string name, string nickname, string url, uint256 captured_at, string[] types, string ability, uint256 weight, uint256 height, (string name, string moveType)[] moves)[])",
+    params: [],
+  });
+
+  console.log(teamPokemons);
+  console.log(teamOakPokemons);
+
   useEffect(() => {
     if (store.refetchPokeball) {
       if (store.refetchPokeball === Pokeball.enum.Pokeball) refetchPokeball();
       if (store.refetchPokeball === Pokeball.enum.GreatBall) refetchGreatball();
       if (store.refetchPokeball === Pokeball.enum.UltraBall) refetchUltraball();
       store.resetRefetchPokeball();
+    }
+  }, [store.refetchPokeball]);
+
+  useEffect(() => {
+    if (store.refetchPokemons) {
+      if (store.refetchPokemons === "team") refetchTeamPokemons();
+      if (store.refetchPokemons === "oak") refetchGreatball();
+      store.resetRefetchPokemons();
     }
   }, [store.refetchPokeball]);
 
@@ -119,18 +154,41 @@ export default function Safari() {
         </button>
       </div>
 
-      <div className="flex gap-5 mt-5">
-        {store.teamPokemons.map((p) => (
-          <div
-            role="button"
-            key={p.nickname}
-            className="flex flex-col items-center justify-center bg-white rounded-lg p-4 cursor-pointer hover:bg-gray-200 active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <img alt={p.name} src={p.url} width={60} height={60} />
-            <p className="text-black">{p.nickname}</p>
+      {teamPokemons && (
+        <div className="mt-10">
+          <p>Team Pokemons</p>
+          <div className="flex gap-5 mt-2">
+            {teamPokemons.map((p) => (
+              <div
+                role="button"
+                key={p.nickname}
+                className="flex flex-col items-center justify-center bg-white rounded-lg p-4 cursor-pointer hover:bg-gray-200 active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <img alt={p.name} src={p.url} width={60} height={60} />
+                <p className="text-black">{p.nickname}</p>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+
+      {teamOakPokemons && (
+        <div className="mt-7">
+          <p>Oak Pokemons</p>
+          <div className="flex gap-5 mt-2">
+            {teamOakPokemons.map((p) => (
+              <div
+                role="button"
+                key={p.nickname}
+                className="flex flex-col items-center justify-center bg-white rounded-lg p-4 cursor-pointer hover:bg-gray-200 active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <img alt={p.name} src={p.url} width={60} height={60} />
+                <p className="text-black">{p.nickname}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <LoadingBarContainer>
         <PokeballModal

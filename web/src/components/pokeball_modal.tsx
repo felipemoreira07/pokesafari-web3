@@ -48,13 +48,13 @@ export default function PokeballModal(props: PokeballModalProps) {
     if (!account) return;
     store.setLoading(true);
     startLoadingBar();
-    console.log(toWei(Pokeball.getEtherPrice(pokeballType)));
+
     const transaction = await prepareContractCall({
       contract,
       method:
         "function addPokeballs(uint256 pokeball_type, uint256 quantity) payable",
       params: [BigInt(pokeballType), BigInt(quantity)],
-      value: toWei(Pokeball.getEtherPrice(pokeballType)),
+      value: toWei(String(Pokeball.getEtherPrice(pokeballType) * quantity)),
     });
     const { transactionHash } = await sendTransaction({
       transaction,
@@ -67,6 +67,7 @@ export default function PokeballModal(props: PokeballModalProps) {
       transactionHash,
     });
     console.log("receipt", receipt);
+
     if (receipt.status === "success") {
       toast.success(`${Pokeball.getLabel(pokeballType)} bought with success!!`);
       store.setRefetchPokeball(pokeballType);
@@ -75,6 +76,7 @@ export default function PokeballModal(props: PokeballModalProps) {
     }
     store.setLoading(false);
     completeLoadingBar();
+    props.setOpen(false);
   };
 
   useEffect(() => {

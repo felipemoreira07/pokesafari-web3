@@ -8,9 +8,9 @@ contract PokeSafari {
     }
 
     struct Pokemon {
-        uint256 id;
         string name;
         string nickname;
+        string url;
         uint256 captured_at;
         string[] types;
         string ability;
@@ -21,9 +21,9 @@ contract PokeSafari {
     }
 
     struct SimplifiedPokemon {
-        uint256 id;
         string name;
         string nickname;
+        string url;
         uint256 captured_at;
         string[] types;
         string ability;
@@ -42,9 +42,9 @@ contract PokeSafari {
     uint256 public constant GREATBALL_PRICE = 0.002 ether;
     uint256 public constant ULTRABALL_PRICE = 0.005 ether;
 
-    uint256 public constant POKEBALL_ACCURACY = 30; //fails??
-    uint256 public constant GREATBALL_ACCURACY = 50;
-    uint256 public constant ULTRABALL_ACCURACY = 70;
+    uint256 public constant POKEBALL_FAILURE_ACCURACY = 70;
+    uint256 public constant GREATBALL_FAILURE_ACCURACY = 50;
+    uint256 public constant ULTRABALL_FAILURE_ACCURACY = 30;
 
     uint256 public constant POKEBALL_TYPE = 1;
     uint256 public constant GREATBALL_TYPE = 2;
@@ -55,9 +55,9 @@ contract PokeSafari {
     event PokemonSentToOak(string pokemonName);
 
     function catchPokemon(
-        uint256 id,
         string memory name,
         string memory nickname,
+        string memory url,
         uint256 captured_at,
         string[] memory types,
         string memory ability,
@@ -77,7 +77,7 @@ contract PokeSafari {
             hasBalls = false;
         }
 
-        require(!hasBalls, "No Pokeball of this type available");
+        require(hasBalls, "No Pokeball of this type available");
 
         if (pokeball_type == POKEBALL_TYPE) {
             s_pokeball_inventory--;
@@ -89,11 +89,11 @@ contract PokeSafari {
 
         if (
             (pokeball_type == POKEBALL_TYPE &&
-                catchAccuracy < POKEBALL_ACCURACY) ||
+                catchAccuracy < POKEBALL_FAILURE_ACCURACY) ||
             (pokeball_type == GREATBALL_TYPE &&
-                catchAccuracy < GREATBALL_ACCURACY) ||
+                catchAccuracy < GREATBALL_FAILURE_ACCURACY) ||
             (pokeball_type == ULTRABALL_TYPE &&
-                catchAccuracy < ULTRABALL_ACCURACY)
+                catchAccuracy < ULTRABALL_FAILURE_ACCURACY)
         ) {
             emit PokemonEscaped(name);
             return;
@@ -101,9 +101,9 @@ contract PokeSafari {
 
         Pokemon storage newPokemon = s_pokemons.push();
 
-        newPokemon.id = id;
         newPokemon.name = name;
         newPokemon.nickname = nickname;
+        newPokemon.url = url;
         newPokemon.captured_at = captured_at;
 
         newPokemon.types = new string[](types.length);
@@ -126,14 +126,13 @@ contract PokeSafari {
         emit PokemonCaptured(name);
     }
 
-    function sendPokemonToOak(uint256 id) public {
+    function sendPokemonToOak(uint256 captured_at) public {
         uint256 pokemons_length = s_pokemons.length;
 
         for (uint256 i = 0; i < pokemons_length; i++) {
             Pokemon storage pokemon = s_pokemons[i];
-            if (pokemon.id == id) {
+            if (pokemon.captured_at == captured_at) {
                 Pokemon storage newPokemon = s_oak_pokemons.push();
-                newPokemon.id = pokemon.id;
                 newPokemon.name = pokemon.name;
                 newPokemon.nickname = pokemon.nickname;
                 newPokemon.captured_at = pokemon.captured_at;
@@ -151,7 +150,6 @@ contract PokeSafari {
                     Pokemon storage lastPokemon = s_pokemons[
                         pokemons_length - 1
                     ];
-                    pokemon.id = lastPokemon.id;
                     pokemon.name = lastPokemon.name;
                     pokemon.nickname = lastPokemon.nickname;
                     pokemon.captured_at = lastPokemon.captured_at;
@@ -168,6 +166,23 @@ contract PokeSafari {
 
                 s_pokemons.pop();
                 emit PokemonSentToOak(pokemon.name);
+                return;
+            }
+        }
+
+        revert("Pokemon not found");
+    }
+
+    function givePokemonNickname(
+        uint256 captured_at,
+        string memory nickname
+    ) public {
+        uint256 pokemons_length = s_pokemons.length;
+
+        for (uint256 i = 0; i < pokemons_length; i++) {
+            Pokemon storage pokemon = s_pokemons[i];
+            if (pokemon.captured_at == captured_at) {
+                pokemon.nickname = nickname;
                 return;
             }
         }
@@ -193,11 +208,11 @@ contract PokeSafari {
         require(msg.value >= totalPrice, "Incorrect Ether amount sent");
 
         if (pokeball_type == POKEBALL_TYPE) {
-            s_pokeball_inventory++;
+            s_pokeball_inventory = s_pokeball_inventory + quantity;
         } else if (pokeball_type == GREATBALL_TYPE) {
-            s_greatball_inventory++;
+            s_greatball_inventory = s_greatball_inventory + quantity;
         } else {
-            s_ultraball_inventory++;
+            s_ultraball_inventory = s_ultraball_inventory + quantity;
         }
     }
 
@@ -217,9 +232,9 @@ contract PokeSafari {
             }
 
             allPokemons[i] = SimplifiedPokemon({
-                id: originalPokemon.id,
                 name: originalPokemon.name,
                 nickname: originalPokemon.nickname,
+                url: originalPokemon.url,
                 captured_at: originalPokemon.captured_at,
                 types: originalPokemon.types,
                 ability: originalPokemon.ability,
@@ -252,9 +267,9 @@ contract PokeSafari {
             }
 
             allPokemons[i] = SimplifiedPokemon({
-                id: originalPokemon.id,
                 name: originalPokemon.name,
                 nickname: originalPokemon.nickname,
+                url: originalPokemon.url,
                 captured_at: originalPokemon.captured_at,
                 types: originalPokemon.types,
                 ability: originalPokemon.ability,
