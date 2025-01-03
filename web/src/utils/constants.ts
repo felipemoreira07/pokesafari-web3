@@ -12,7 +12,7 @@ export const client = createThirdwebClient({
 });
 
 export const contract = getContract({
-  address: "0x489CEd290cB4731a514Fb802cc9AB3Ee999c69Cb",
+  address: "0x2F1ea3eaAa964b4e642ba7C006570dd24D6B83B4",
   chain: sepolia,
   client,
 });

@@ -20,7 +20,7 @@ import { useLoadingBar } from "react-top-loading-bar";
 import { useRouter } from "next/navigation";
 import { Pokeball } from "@/utils/enum/PokeBalls";
 import { sepolia } from "thirdweb/chains";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import Image from "next/image";
 import { getFilteredPokemon } from "@/utils/getFilteredPokemon";
 import { capitalizeFirstLetter } from "@/utils/capitalizeFirstLetter";
@@ -64,36 +64,35 @@ export default function CatchPokemonModal(props: PokeballModalProps) {
   const catchPokemon = async () => {
     if (!account || !store.newPokemon) return;
 
-    const name = store.newPokemon.name;
-    const nickname = store.newPokemon.name;
-    const url = store.newPokemon.url;
-    const captured_at = BigInt(store.newPokemon.captured_at);
-    const types = store.newPokemon.types;
-    const ability = store.newPokemon.ability;
-    const weight = BigInt(store.newPokemon.weight);
-    const height = BigInt(store.newPokemon.height);
-    const moves = store.newPokemon.moves;
-    const pokeball_type = BigInt(pokeballType);
-    console.log(pokeball_type);
-    const catchAccuracy = BigInt(Math.floor(Math.random() * 100));
+    const _name = store.newPokemon.name;
+    const _nickname = store.newPokemon.name;
+    const _url = store.newPokemon.url;
+    const _captured_at = BigInt(store.newPokemon.captured_at);
+    const _types = store.newPokemon.types;
+    const _ability = store.newPokemon.ability;
+    const _weight = BigInt(store.newPokemon.weight);
+    const _height = BigInt(store.newPokemon.height);
+    const _moves = store.newPokemon.moves;
+    const _pokeball_type = BigInt(pokeballType);
+    const _catch_accuracy = BigInt(Math.floor(Math.random() * 100));
 
     startLoadingBar();
     const transaction = prepareContractCall({
       contract,
       method:
-        "function catchPokemon(string name, string nickname, string url, uint256 captured_at, string[] types, string ability, uint256 weight, uint256 height, (string name, string moveType)[] moves, uint256 pokeball_type, uint256 catchAccuracy)",
+        "function catchPokemon(string _name, string _nickname, string _url, uint256 _captured_at, string[] _types, string _ability, uint256 _weight, uint256 _height, string[] _moves, uint256 _pokeball_type, uint256 _catch_accuracy)",
       params: [
-        name,
-        nickname,
-        url,
-        captured_at,
-        types,
-        ability,
-        weight,
-        height,
-        moves,
-        pokeball_type,
-        catchAccuracy,
+        _name,
+        _nickname,
+        _url,
+        _captured_at,
+        _types,
+        _ability,
+        _weight,
+        _height,
+        _moves,
+        _pokeball_type,
+        _catch_accuracy,
       ],
     });
 
@@ -113,6 +112,7 @@ export default function CatchPokemonModal(props: PokeballModalProps) {
     if (receipt.status === "success") {
       toast.success(`${store.newPokemon.name} caught with success!!`);
       store.setRefetchPokemons("team");
+      store.setRefetchPokeball(pokeballType);
     } else {
       toast.error("Pokemon ran away..");
     }
@@ -198,7 +198,6 @@ export default function CatchPokemonModal(props: PokeballModalProps) {
           </DialogPanel>
         </div>
       </div>
-      <ToastContainer aria-label="" />
     </Dialog>
   );
 }

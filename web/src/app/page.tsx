@@ -1,40 +1,14 @@
 "use client";
 
-import { client, contract } from "@/utils/constants";
+import { client } from "@/utils/constants";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { sepolia } from "thirdweb/chains";
-import {
-  ConnectButton,
-  useActiveAccount,
-  useReadContract,
-} from "thirdweb/react";
+import { ConnectButton, useActiveAccount } from "thirdweb/react";
 
 export default function Home() {
   const account = useActiveAccount();
   const router = useRouter();
-
-  const { data: pokemons, isPending: isPendingPokemons } = useReadContract({
-    contract,
-    method:
-      "function getAllPokemons() view returns ((uint256 id, string name, string nickname, uint256 captured_at, string[] types, string ability, uint256 weight, uint256 height, (string name, string moveType)[] moves)[])",
-    params: [],
-  });
-
-  const { data: oakPokemons, isPending: isPendingOakPokemons } =
-    useReadContract({
-      contract,
-      method:
-        "function getAllOakPokemons() view returns ((uint256 id, string name, string nickname, uint256 captured_at, string[] types, string ability, uint256 weight, uint256 height, (string name, string moveType)[] moves)[])",
-      params: [],
-    });
-
-  console.log(pokemons);
-
-  // useEffect(() => {
-  //   if (account) router.push("/safari");
-  // }, [account]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-8 pb-20 gap-16">

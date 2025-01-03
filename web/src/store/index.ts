@@ -14,7 +14,7 @@ export interface IPokemon {
   ability: string;
   weight: number;
   height: number;
-  moves: Move[];
+  moves: string[];
 }
 
 export interface INewPokemon {

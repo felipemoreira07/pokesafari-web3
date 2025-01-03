@@ -20,7 +20,7 @@ import { useLoadingBar } from "react-top-loading-bar";
 import { useRouter } from "next/navigation";
 import { Pokeball } from "@/utils/enum/PokeBalls";
 import { sepolia } from "thirdweb/chains";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 
 interface PokeballModalProps {
   open: boolean;
@@ -52,7 +52,7 @@ export default function PokeballModal(props: PokeballModalProps) {
     const transaction = await prepareContractCall({
       contract,
       method:
-        "function addPokeballs(uint256 pokeball_type, uint256 quantity) payable",
+        "function addPokeballs(uint256 _pokeball_type, uint256 quantity) payable",
       params: [BigInt(pokeballType), BigInt(quantity)],
       value: toWei(String(Pokeball.getEtherPrice(pokeballType) * quantity)),
     });
@@ -167,7 +167,6 @@ export default function PokeballModal(props: PokeballModalProps) {
           </DialogPanel>
         </div>
       </div>
-      <ToastContainer aria-label="" />
     </Dialog>
   );
 }

@@ -4,12 +4,9 @@ import { capitalizeFirstLetter } from "./capitalizeFirstLetter";
 
 export function getFilteredPokemon(data: INewPokemon, id: number) {
   const filteredPokemon: IPokemon = {
-    name: data.name,
+    name: capitalizeFirstLetter(data.name),
     url: data.sprites.front_default,
-    moves: getRandomElements(data.moves, 4).map((m) => ({
-      name: m.move.name,
-      moveType: "normal",
-    })),
+    moves: getRandomElements(data.moves, 4).map((m) => m.move.name),
     ability: getRandomElements(data.abilities, 1)[0].ability.name,
     types: data.types.map((type: { type: { name: string } }) => type.type.name),
     weight: data.weight,

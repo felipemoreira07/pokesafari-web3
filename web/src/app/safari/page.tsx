@@ -7,10 +7,11 @@ import { contract } from "@/utils/constants";
 import { Pokeball } from "@/utils/enum/PokeBalls";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { ToastContainer } from "react-toastify";
 import { LoadingBarContainer } from "react-top-loading-bar";
 import { useReadContract } from "thirdweb/react";
 
-export default function Safari() {
+function SafariUI() {
   const [openPokeballModal, setOpenPokeballModal] = useState<boolean>(false);
   const [catchPokeballModal, setCatchPokeballModal] = useState<boolean>(false);
   const store = useAppStore();
@@ -48,29 +49,20 @@ export default function Safari() {
     params: [],
   });
 
-  const {
-    data: teamPokemons,
-    refetch: refetchTeamPokemons,
-    isPending: isPendingTeamPokemons,
-    isRefetching: isRefetchingTeamPokemons,
-  } = useReadContract({
+  const { data: teamPokemons, refetch: refetchTeamPokemons } = useReadContract({
     contract,
     method:
-      "function getAllPokemons() view returns ((string name, string nickname, string url, uint256 captured_at, string[] types, string ability, uint256 weight, uint256 height, (string name, string moveType)[] moves)[])",
+      "function getAllPokemons() view returns ((string name, string nickname, string url, uint256 captured_at, string[] types, string ability, uint256 weight, uint256 height, string[] moves)[])",
     params: [],
   });
 
-  const {
-    data: teamOakPokemons,
-    refetch: refetchTeamOakPokemons,
-    isPending: isPendingTeamOakPokemons,
-    isRefetching: isRefetchingTeamOakPokemons,
-  } = useReadContract({
-    contract,
-    method:
-      "function getAllOakPokemons() view returns ((string name, string nickname, string url, uint256 captured_at, string[] types, string ability, uint256 weight, uint256 height, (string name, string moveType)[] moves)[])",
-    params: [],
-  });
+  const { data: teamOakPokemons, refetch: refetchTeamOakPokemons } =
+    useReadContract({
+      contract,
+      method:
+        "function getAllOakPokemons() view returns ((string name, string nickname, string url, uint256 captured_at, string[] types, string ability, uint256 weight, uint256 height, string[] moves)[])",
+      params: [],
+    });
 
   console.log(teamPokemons);
   console.log(teamOakPokemons);
@@ -87,10 +79,10 @@ export default function Safari() {
   useEffect(() => {
     if (store.refetchPokemons) {
       if (store.refetchPokemons === "team") refetchTeamPokemons();
-      if (store.refetchPokemons === "oak") refetchGreatball();
+      if (store.refetchPokemons === "oak") refetchTeamOakPokemons();
       store.resetRefetchPokemons();
     }
-  }, [store.refetchPokeball]);
+  }, [store.refetchPokemons]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 pb-20 font-[family-name:var(--font-poppins)]">
@@ -172,7 +164,7 @@ export default function Safari() {
         </div>
       )}
 
-      {teamOakPokemons && (
+      {teamOakPokemons && teamOakPokemons?.length > 0 && (
         <div className="mt-7">
           <p>Oak Pokemons</p>
           <div className="flex gap-5 mt-2">
@@ -201,5 +193,14 @@ export default function Safari() {
         />
       </LoadingBarContainer>
     </div>
+  );
+}
+
+export default function Safari() {
+  return (
+    <LoadingBarContainer>
+      <SafariUI />
+      <ToastContainer aria-label="" />
+    </LoadingBarContainer>
   );
 }
