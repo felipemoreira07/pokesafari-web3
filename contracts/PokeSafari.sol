@@ -2,11 +2,6 @@
 pragma solidity ^0.8.18;
 
 contract PokeSafari {
-    struct Move {
-        string name;
-        string moveType;
-    }
-
     struct Pokemon {
         string name;
         string nickname;
@@ -16,123 +11,106 @@ contract PokeSafari {
         string ability;
         uint256 weight;
         uint256 height;
-        mapping(uint256 => Move) moves;
-        uint256 movesSize;
+        string[] moves;
     }
 
-    struct SimplifiedPokemon {
-        string name;
-        string nickname;
-        string url;
-        uint256 captured_at;
-        string[] types;
-        string ability;
-        uint256 weight;
-        uint256 height;
-        Move[] moves;
-    }
+    Pokemon[] private pokemons;
+    Pokemon[] private oak_pokemons;
+    uint256 private pokeball_inventory;
+    uint256 private greatball_inventory;
+    uint256 private ultraball_inventory;
 
-    Pokemon[] public s_pokemons;
-    Pokemon[] public s_oak_pokemons;
-    uint256 public s_pokeball_inventory;
-    uint256 public s_greatball_inventory;
-    uint256 public s_ultraball_inventory;
+    uint256 private constant POKEBALL_PRICE = 0.001 ether;
+    uint256 private constant GREATBALL_PRICE = 0.002 ether;
+    uint256 private constant ULTRABALL_PRICE = 0.005 ether;
 
-    uint256 public constant POKEBALL_PRICE = 0.001 ether;
-    uint256 public constant GREATBALL_PRICE = 0.002 ether;
-    uint256 public constant ULTRABALL_PRICE = 0.005 ether;
+    uint256 private constant POKEBALL_FAILURE_ACCURACY = 70;
+    uint256 private constant GREATBALL_FAILURE_ACCURACY = 50;
+    uint256 private constant ULTRABALL_FAILURE_ACCURACY = 30;
 
-    uint256 public constant POKEBALL_FAILURE_ACCURACY = 70;
-    uint256 public constant GREATBALL_FAILURE_ACCURACY = 50;
-    uint256 public constant ULTRABALL_FAILURE_ACCURACY = 30;
-
-    uint256 public constant POKEBALL_TYPE = 1;
-    uint256 public constant GREATBALL_TYPE = 2;
-    uint256 public constant ULTRABALL_TYPE = 3;
+    uint256 private constant POKEBALL_TYPE = 1;
+    uint256 private constant GREATBALL_TYPE = 2;
+    uint256 private constant ULTRABALL_TYPE = 3;
 
     event PokemonCaptured(string pokemonName);
     event PokemonEscaped(string pokemonName);
     event PokemonSentToOak(string pokemonName);
 
     function catchPokemon(
-        string memory name,
-        string memory nickname,
-        string memory url,
-        uint256 captured_at,
-        string[] memory types,
-        string memory ability,
-        uint256 weight,
-        uint256 height,
-        Move[] memory moves,
-        uint256 pokeball_type,
-        uint256 catchAccuracy
+        string memory _name,
+        string memory _nickname,
+        string memory _url,
+        uint256 _captured_at,
+        string[] memory _types,
+        string memory _ability,
+        uint256 _weight,
+        uint256 _height,
+        string[] memory _moves,
+        uint256 _pokeball_type,
+        uint256 _catch_accuracy
     ) public {
         bool hasBalls = true;
 
         if (
-            (pokeball_type == POKEBALL_TYPE && s_pokeball_inventory <= 0) ||
-            (pokeball_type == GREATBALL_TYPE && s_greatball_inventory <= 0) ||
-            (pokeball_type == ULTRABALL_TYPE && s_ultraball_inventory <= 0)
+            (_pokeball_type == POKEBALL_TYPE && pokeball_inventory <= 0) ||
+            (_pokeball_type == GREATBALL_TYPE && greatball_inventory <= 0) ||
+            (_pokeball_type == ULTRABALL_TYPE && ultraball_inventory <= 0)
         ) {
             hasBalls = false;
         }
 
         require(hasBalls, "No Pokeball of this type available");
 
-        if (pokeball_type == POKEBALL_TYPE) {
-            s_pokeball_inventory--;
-        } else if (pokeball_type == GREATBALL_TYPE) {
-            s_greatball_inventory--;
+        if (_pokeball_type == POKEBALL_TYPE) {
+            pokeball_inventory--;
+        } else if (_pokeball_type == GREATBALL_TYPE) {
+            greatball_inventory--;
         } else {
-            s_ultraball_inventory--;
+            ultraball_inventory--;
         }
 
         if (
-            (pokeball_type == POKEBALL_TYPE &&
-                catchAccuracy < POKEBALL_FAILURE_ACCURACY) ||
-            (pokeball_type == GREATBALL_TYPE &&
-                catchAccuracy < GREATBALL_FAILURE_ACCURACY) ||
-            (pokeball_type == ULTRABALL_TYPE &&
-                catchAccuracy < ULTRABALL_FAILURE_ACCURACY)
+            (_pokeball_type == POKEBALL_TYPE &&
+                _catch_accuracy < POKEBALL_FAILURE_ACCURACY) ||
+            (_pokeball_type == GREATBALL_TYPE &&
+                _catch_accuracy < GREATBALL_FAILURE_ACCURACY) ||
+            (_pokeball_type == ULTRABALL_TYPE &&
+                _catch_accuracy < ULTRABALL_FAILURE_ACCURACY)
         ) {
-            emit PokemonEscaped(name);
+            emit PokemonEscaped(_name);
             return;
         }
 
-        Pokemon storage newPokemon = s_pokemons.push();
+        Pokemon storage newPokemon = pokemons.push();
 
-        newPokemon.name = name;
-        newPokemon.nickname = nickname;
-        newPokemon.url = url;
-        newPokemon.captured_at = captured_at;
+        newPokemon.name = _name;
+        newPokemon.nickname = _nickname;
+        newPokemon.url = _url;
+        newPokemon.captured_at = _captured_at;
+        newPokemon.ability = _ability;
+        newPokemon.weight = _weight;
+        newPokemon.height = _height;
 
-        newPokemon.types = new string[](types.length);
-        for (uint i = 0; i < types.length; i++) {
-            newPokemon.types[i] = types[i];
+        newPokemon.types = new string[](_types.length);
+        for (uint i = 0; i < _types.length; i++) {
+            newPokemon.types[i] = _types[i];
         }
 
-        newPokemon.ability = ability;
-        newPokemon.weight = weight;
-        newPokemon.height = height;
-
-        for (uint j = 0; j < moves.length; j++) {
-            newPokemon.moves[j] = Move({
-                name: moves[j].name,
-                moveType: moves[j].moveType
-            });
-            newPokemon.movesSize++;
+        newPokemon.moves = new string[](_moves.length);
+        for (uint i = 0; i < _moves.length; i++) {
+            newPokemon.moves[i] = _moves[i];
         }
 
-        emit PokemonCaptured(name);
+        emit PokemonCaptured(_name);
     }
 
-    function sendPokemonToOak(uint256 captured_at) public {
-        uint256 pokemons_length = s_pokemons.length;
+    function sendPokemonToOak(uint256 _captured_at) public {
+        uint256 pokemonlength = pokemons.length;
 
-        for (uint256 i = 0; i < pokemons_length; i++) {
-            Pokemon storage pokemon = s_pokemons[i];
-            if (pokemon.captured_at == captured_at) {
-                Pokemon storage newPokemon = s_oak_pokemons.push();
+        for (uint256 i = 0; i < pokemonlength; i++) {
+            Pokemon storage pokemon = pokemons[i];
+            if (pokemon.captured_at == _captured_at) {
+                Pokemon storage newPokemon = oak_pokemons.push();
                 newPokemon.name = pokemon.name;
                 newPokemon.nickname = pokemon.nickname;
                 newPokemon.captured_at = pokemon.captured_at;
@@ -140,16 +118,10 @@ contract PokeSafari {
                 newPokemon.ability = pokemon.ability;
                 newPokemon.weight = pokemon.weight;
                 newPokemon.height = pokemon.height;
+                newPokemon.moves = pokemon.moves;
 
-                for (uint256 j = 0; j < pokemon.movesSize; j++) {
-                    newPokemon.moves[j] = pokemon.moves[j];
-                }
-                newPokemon.movesSize = pokemon.movesSize;
-
-                if (i < pokemons_length - 1) {
-                    Pokemon storage lastPokemon = s_pokemons[
-                        pokemons_length - 1
-                    ];
+                if (i < pokemonlength - 1) {
+                    Pokemon storage lastPokemon = pokemons[pokemonlength - 1];
                     pokemon.name = lastPokemon.name;
                     pokemon.nickname = lastPokemon.nickname;
                     pokemon.captured_at = lastPokemon.captured_at;
@@ -157,14 +129,10 @@ contract PokeSafari {
                     pokemon.ability = lastPokemon.ability;
                     pokemon.weight = lastPokemon.weight;
                     pokemon.height = lastPokemon.height;
-
-                    for (uint256 j = 0; j < lastPokemon.movesSize; j++) {
-                        pokemon.moves[j] = lastPokemon.moves[j];
-                    }
-                    pokemon.movesSize = lastPokemon.movesSize;
+                    pokemon.moves = lastPokemon.moves;
                 }
 
-                s_pokemons.pop();
+                pokemons.pop();
                 emit PokemonSentToOak(pokemon.name);
                 return;
             }
@@ -177,10 +145,10 @@ contract PokeSafari {
         uint256 captured_at,
         string memory nickname
     ) public {
-        uint256 pokemons_length = s_pokemons.length;
+        uint256 pokemonlength = pokemons.length;
 
-        for (uint256 i = 0; i < pokemons_length; i++) {
-            Pokemon storage pokemon = s_pokemons[i];
+        for (uint256 i = 0; i < pokemonlength; i++) {
+            Pokemon storage pokemon = pokemons[i];
             if (pokemon.captured_at == captured_at) {
                 pokemon.nickname = nickname;
                 return;
@@ -191,15 +159,15 @@ contract PokeSafari {
     }
 
     function addPokeballs(
-        uint256 pokeball_type,
+        uint256 _pokeball_type,
         uint256 quantity
     ) public payable {
         require(quantity > 0, "Quantity must be greater than zero");
 
-        uint256 pokeball_price = pokeball_type == POKEBALL_TYPE
+        uint256 pokeball_price = _pokeball_type == POKEBALL_TYPE
             ? POKEBALL_PRICE
             : (
-                pokeball_type == GREATBALL_TYPE
+                _pokeball_type == GREATBALL_TYPE
                     ? GREATBALL_PRICE
                     : ULTRABALL_PRICE
             );
@@ -207,90 +175,32 @@ contract PokeSafari {
 
         require(msg.value >= totalPrice, "Incorrect Ether amount sent");
 
-        if (pokeball_type == POKEBALL_TYPE) {
-            s_pokeball_inventory = s_pokeball_inventory + quantity;
-        } else if (pokeball_type == GREATBALL_TYPE) {
-            s_greatball_inventory = s_greatball_inventory + quantity;
+        if (_pokeball_type == POKEBALL_TYPE) {
+            pokeball_inventory = pokeball_inventory + quantity;
+        } else if (_pokeball_type == GREATBALL_TYPE) {
+            greatball_inventory = greatball_inventory + quantity;
         } else {
-            s_ultraball_inventory = s_ultraball_inventory + quantity;
+            ultraball_inventory = ultraball_inventory + quantity;
         }
     }
 
-    function getAllPokemons() public view returns (SimplifiedPokemon[] memory) {
-        uint256 pokemonCount = s_pokemons.length;
-        SimplifiedPokemon[] memory allPokemons = new SimplifiedPokemon[](
-            pokemonCount
-        );
-
-        for (uint256 i = 0; i < pokemonCount; i++) {
-            Pokemon storage originalPokemon = s_pokemons[i];
-            Move[] memory moves = new Move[](originalPokemon.movesSize);
-
-            for (uint256 j = 0; j < originalPokemon.movesSize; j++) {
-                Move storage move = originalPokemon.moves[j];
-                moves[j] = Move({name: move.name, moveType: move.moveType});
-            }
-
-            allPokemons[i] = SimplifiedPokemon({
-                name: originalPokemon.name,
-                nickname: originalPokemon.nickname,
-                url: originalPokemon.url,
-                captured_at: originalPokemon.captured_at,
-                types: originalPokemon.types,
-                ability: originalPokemon.ability,
-                weight: originalPokemon.weight,
-                height: originalPokemon.height,
-                moves: moves
-            });
-        }
-
-        return allPokemons;
+    function getAllPokemons() public view returns (Pokemon[] memory) {
+        return pokemons;
     }
 
-    function getAllOakPokemons()
-        public
-        view
-        returns (SimplifiedPokemon[] memory)
-    {
-        uint256 pokemonCount = s_oak_pokemons.length;
-        SimplifiedPokemon[] memory allPokemons = new SimplifiedPokemon[](
-            pokemonCount
-        );
-
-        for (uint256 i = 0; i < pokemonCount; i++) {
-            Pokemon storage originalPokemon = s_oak_pokemons[i];
-            Move[] memory moves = new Move[](originalPokemon.movesSize);
-
-            for (uint256 j = 0; j < originalPokemon.movesSize; j++) {
-                Move storage move = originalPokemon.moves[j];
-                moves[j] = Move({name: move.name, moveType: move.moveType});
-            }
-
-            allPokemons[i] = SimplifiedPokemon({
-                name: originalPokemon.name,
-                nickname: originalPokemon.nickname,
-                url: originalPokemon.url,
-                captured_at: originalPokemon.captured_at,
-                types: originalPokemon.types,
-                ability: originalPokemon.ability,
-                weight: originalPokemon.weight,
-                height: originalPokemon.height,
-                moves: moves
-            });
-        }
-
-        return allPokemons;
+    function getAllOakPokemons() public view returns (Pokemon[] memory) {
+        return oak_pokemons;
     }
 
     function getPokeballs() public view returns (uint256) {
-        return s_pokeball_inventory;
+        return pokeball_inventory;
     }
 
     function getGreatballs() public view returns (uint256) {
-        return s_greatball_inventory;
+        return greatball_inventory;
     }
 
     function getUltraballs() public view returns (uint256) {
-        return s_ultraball_inventory;
+        return ultraball_inventory;
     }
 }
