@@ -2,19 +2,24 @@
 
 import CatchPokemonModal from "@/components/catch_pokemon_modal";
 import PokeballModal from "@/components/pokeball_modal";
-import { useAppStore } from "@/store";
+import { IPokemon, useStore } from "@/store";
+import { capitalizeFirstLetter } from "@/utils/capitalizeFirstLetter";
 import { contract } from "@/utils/constants";
 import { Pokeball } from "@/utils/enum/PokeBalls";
+import { FormatPokemon } from "@/utils/formatPokemon";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
 import { LoadingBarContainer } from "react-top-loading-bar";
-import { useReadContract } from "thirdweb/react";
+import { useActiveAccount, useReadContract } from "thirdweb/react";
 
 function SafariUI() {
   const [openPokeballModal, setOpenPokeballModal] = useState<boolean>(false);
   const [catchPokeballModal, setCatchPokeballModal] = useState<boolean>(false);
-  const store = useAppStore();
+  const store = useStore();
+  const account = useActiveAccount();
+  const router = useRouter();
 
   const {
     data: pokeballs,
@@ -56,16 +61,17 @@ function SafariUI() {
     params: [],
   });
 
-  const { data: teamOakPokemons, refetch: refetchTeamOakPokemons } =
-    useReadContract({
-      contract,
-      method:
-        "function getAllOakPokemons() view returns ((string name, string nickname, string url, uint256 captured_at, string[] types, string ability, uint256 weight, uint256 height, string[] moves)[])",
-      params: [],
-    });
+  const { data: oakPokemons, refetch: refetchOakPokemons } = useReadContract({
+    contract,
+    method:
+      "function getAllOakPokemons() view returns ((string name, string nickname, string url, uint256 captured_at, string[] types, string ability, uint256 weight, uint256 height, string[] moves)[])",
+    params: [],
+  });
 
-  console.log(teamPokemons);
-  console.log(teamOakPokemons);
+  const selectTeamPokemon = (pokemon: IPokemon) => {
+    store.setSelectedPokemon(pokemon);
+    router.push("/team");
+  };
 
   useEffect(() => {
     if (store.refetchPokeball) {
@@ -79,13 +85,33 @@ function SafariUI() {
   useEffect(() => {
     if (store.refetchPokemons) {
       if (store.refetchPokemons === "team") refetchTeamPokemons();
-      if (store.refetchPokemons === "oak") refetchTeamOakPokemons();
+      if (store.refetchPokemons === "oak") refetchOakPokemons();
       store.resetRefetchPokemons();
     }
   }, [store.refetchPokemons]);
 
+  useEffect(() => {
+    if (teamPokemons) {
+      const formattedPokemons =
+        FormatPokemon.formatContractPokemons(teamPokemons);
+      store.setTeamPokemons(formattedPokemons);
+    }
+  }, [teamPokemons]);
+
+  useEffect(() => {
+    if (oakPokemons) {
+      const formattedPokemons =
+        FormatPokemon.formatContractPokemons(oakPokemons);
+      store.setOakPokemons(formattedPokemons);
+    }
+  }, [oakPokemons]);
+
+  useEffect(() => {
+    if (!account) router.push("/");
+  }, []);
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8 pb-20 font-[family-name:var(--font-poppins)]">
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 pb-20">
       <div className="flex items-center gap-8">
         <Image
           src="/pokeball.svg"
@@ -146,7 +172,7 @@ function SafariUI() {
         </button>
       </div>
 
-      {teamPokemons && (
+      {teamPokemons && teamPokemons.length > 0 && (
         <div className="mt-10">
           <p>Team Pokemons</p>
           <div className="flex gap-5 mt-2">
@@ -155,20 +181,25 @@ function SafariUI() {
                 role="button"
                 key={p.nickname}
                 className="flex flex-col items-center justify-center bg-white rounded-lg p-4 cursor-pointer hover:bg-gray-200 active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onClick={() =>
+                  selectTeamPokemon(FormatPokemon.formatContractPokemon(p))
+                }
               >
                 <img alt={p.name} src={p.url} width={60} height={60} />
-                <p className="text-black">{p.nickname}</p>
+                <p className="text-black">
+                  {capitalizeFirstLetter(p.nickname)}
+                </p>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {teamOakPokemons && teamOakPokemons?.length > 0 && (
+      {oakPokemons && oakPokemons?.length > 0 && (
         <div className="mt-7">
           <p>Oak Pokemons</p>
           <div className="flex gap-5 mt-2">
-            {teamOakPokemons.map((p) => (
+            {oakPokemons.map((p) => (
               <div
                 role="button"
                 key={p.nickname}

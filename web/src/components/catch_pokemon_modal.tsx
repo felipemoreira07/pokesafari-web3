@@ -7,23 +7,15 @@ import {
   DialogPanel,
   DialogTitle,
 } from "@headlessui/react";
-import {
-  prepareContractCall,
-  sendTransaction,
-  toWei,
-  waitForReceipt,
-} from "thirdweb";
+import { prepareContractCall, sendTransaction, waitForReceipt } from "thirdweb";
 import { contract, client } from "@/utils/constants";
 import { useActiveAccount } from "thirdweb/react";
-import { INewPokemon, IPokemon, useAppStore } from "@/store";
+import { INewPokemon, useStore } from "@/store";
 import { useLoadingBar } from "react-top-loading-bar";
-import { useRouter } from "next/navigation";
-import { Pokeball } from "@/utils/enum/PokeBalls";
 import { sepolia } from "thirdweb/chains";
 import { toast } from "react-toastify";
-import Image from "next/image";
-import { getFilteredPokemon } from "@/utils/getFilteredPokemon";
 import { capitalizeFirstLetter } from "@/utils/capitalizeFirstLetter";
+import { FormatPokemon } from "@/utils/formatPokemon";
 
 interface PokeballModalProps {
   open: boolean;
@@ -32,9 +24,8 @@ interface PokeballModalProps {
 
 export default function CatchPokemonModal(props: PokeballModalProps) {
   const [pokeballType, setPokeballType] = useState<number>(1);
-  const router = useRouter();
   const account = useActiveAccount();
-  const store = useAppStore();
+  const store = useStore();
   const { start: startLoadingBar, complete: completeLoadingBar } =
     useLoadingBar({
       color: "blue",
@@ -48,7 +39,7 @@ export default function CatchPokemonModal(props: PokeballModalProps) {
         `https://pokeapi.co/api/v2/pokemon/${randomPokemonId}`
       );
       const data: INewPokemon = await response.json();
-      const filteredPokemon = getFilteredPokemon(data, randomPokemonId);
+      const filteredPokemon = FormatPokemon.formatSafariPokemons(data);
       store.setNewPokemon(filteredPokemon);
       console.log(store.newPokemon);
     } catch (error) {
@@ -120,10 +111,6 @@ export default function CatchPokemonModal(props: PokeballModalProps) {
     completeLoadingBar();
     run();
   };
-
-  useEffect(() => {
-    if (!account) router.push("/");
-  }, []);
 
   useEffect(() => {
     if (!store.newPokemon) getNewPokemon();

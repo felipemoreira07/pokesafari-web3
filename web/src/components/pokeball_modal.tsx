@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogBackdrop,
@@ -15,9 +15,8 @@ import {
 } from "thirdweb";
 import { contract, client } from "@/utils/constants";
 import { useActiveAccount } from "thirdweb/react";
-import { useAppStore } from "@/store";
+import { useStore } from "@/store";
 import { useLoadingBar } from "react-top-loading-bar";
-import { useRouter } from "next/navigation";
 import { Pokeball } from "@/utils/enum/PokeBalls";
 import { sepolia } from "thirdweb/chains";
 import { toast } from "react-toastify";
@@ -34,9 +33,8 @@ const ULTRABALL_PRICE = "0.005 ether";
 export default function PokeballModal(props: PokeballModalProps) {
   const [pokeballType, setPokeballType] = useState<number>(1);
   const [quantity, setQuantity] = useState<number>(1);
-  const router = useRouter();
   const account = useActiveAccount();
-  const store = useAppStore();
+  const store = useStore();
   const { start: startLoadingBar, complete: completeLoadingBar } =
     useLoadingBar({
       color: "blue",
@@ -78,10 +76,6 @@ export default function PokeballModal(props: PokeballModalProps) {
     completeLoadingBar();
     props.setOpen(false);
   };
-
-  useEffect(() => {
-    if (!account) router.push("/");
-  }, []);
 
   return (
     <Dialog open={props.open} onClose={props.setOpen} className="relative z-10">

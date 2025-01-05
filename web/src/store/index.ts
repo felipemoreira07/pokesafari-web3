@@ -5,7 +5,6 @@ export interface Move {
   moveType: string;
 }
 export interface IPokemon {
-  id: number;
   name: string;
   nickname: string;
   url: string;
@@ -27,23 +26,27 @@ export interface INewPokemon {
   height: number;
 }
 
-interface AppStateVariables {
+interface StoreVariables {
   newPokemon: IPokemon | undefined;
   selectedPokemon: IPokemon | undefined;
   teamPokemons: IPokemon[];
+  oakPokemons: IPokemon[];
+
   refetchPokeball: number | undefined;
   refetchPokemons: "team" | "oak" | undefined;
+
   isLoading: boolean;
 }
 
-interface AppStateActions {
+interface StoreActions {
   setNewPokemon: (pokemon: IPokemon) => void;
   resetNewPokemon: () => void;
 
   setSelectedPokemon: (pokemon: IPokemon) => void;
   resetSelectedPokemon: (pokemon: IPokemon) => void;
 
-  addTeamPokemon: (pokemon: IPokemon) => void;
+  setTeamPokemons: (pokemon: IPokemon[]) => void;
+  setOakPokemons: (pokemon: IPokemon[]) => void;
 
   setRefetchPokeball: (val: number) => void;
   resetRefetchPokeball: () => void;
@@ -54,34 +57,39 @@ interface AppStateActions {
   setLoading: (val: boolean) => void;
 }
 
-export const useAppStore = create<AppStateVariables & AppStateActions>(
-  (set) => ({
-    newPokemon: undefined,
-    selectedPokemon: undefined,
-    teamPokemons: [],
-    refetchPokeball: undefined,
-    refetchPokemons: undefined,
-    isLoading: false,
+export const useStore = create<StoreVariables & StoreActions>((set) => ({
+  newPokemon: undefined,
+  selectedPokemon: undefined,
+  teamPokemons: [],
+  oakPokemons: [],
 
-    setNewPokemon: (pokemon: IPokemon) => set(() => ({ newPokemon: pokemon })),
-    resetNewPokemon: () => set(() => ({ newPokemon: undefined })),
+  refetchPokeball: undefined,
+  refetchPokemons: undefined,
 
-    setSelectedPokemon: (pokemon: IPokemon) =>
-      set(() => ({ selectedPokemon: pokemon })),
-    resetSelectedPokemon: () => set(() => ({ selectedPokemon: undefined })),
+  isLoading: false,
 
-    addTeamPokemon: (pokemon) =>
-      set((state) => ({
-        teamPokemons: [...state.teamPokemons, pokemon],
-      })),
+  setNewPokemon: (pokemon: IPokemon) => set(() => ({ newPokemon: pokemon })),
+  resetNewPokemon: () => set(() => ({ newPokemon: undefined })),
 
-    setRefetchPokeball: (val: number) => set(() => ({ refetchPokeball: val })),
-    resetRefetchPokeball: () => set(() => ({ refetchPokeball: undefined })),
+  setSelectedPokemon: (pokemon: IPokemon) =>
+    set(() => ({ selectedPokemon: pokemon })),
+  resetSelectedPokemon: () => set(() => ({ selectedPokemon: undefined })),
 
-    setRefetchPokemons: (val: "team" | "oak") =>
-      set(() => ({ refetchPokemons: val })),
-    resetRefetchPokemons: () => set(() => ({ refetchPokemons: undefined })),
+  setTeamPokemons: (pokemons: IPokemon[]) =>
+    set(() => ({
+      teamPokemons: pokemons,
+    })),
+  setOakPokemons: (pokemons: IPokemon[]) =>
+    set(() => ({
+      oakPokemons: pokemons,
+    })),
 
-    setLoading: (val: boolean) => set(() => ({ isLoading: val })),
-  })
-);
+  setRefetchPokeball: (val: number) => set(() => ({ refetchPokeball: val })),
+  resetRefetchPokeball: () => set(() => ({ refetchPokeball: undefined })),
+
+  setRefetchPokemons: (val: "team" | "oak") =>
+    set(() => ({ refetchPokemons: val })),
+  resetRefetchPokemons: () => set(() => ({ refetchPokemons: undefined })),
+
+  setLoading: (val: boolean) => set(() => ({ isLoading: val })),
+}));
