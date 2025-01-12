@@ -2,6 +2,7 @@
 
 import { client } from "@/utils/constants";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { sepolia } from "thirdweb/chains";
 import { ConnectButton, useActiveAccount } from "thirdweb/react";
@@ -29,11 +30,9 @@ export default function Home() {
           client={client}
           chain={sepolia}
           connectModal={{ size: "wide" }}
-          // onConnect={() => router.push("/safari")}
+          onConnect={() => router.push("/safari")}
         />
-        {account && (
-          <button onClick={() => router.push("/safari")}>Go to Safari</button>
-        )}
+        {account && <Link href="/safari">Go to Safari</Link>}
       </main>
     </div>
   );

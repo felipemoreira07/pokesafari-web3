@@ -15,10 +15,10 @@ export class Pokeball {
     [this.enum.UltraBall]: 0.005,
   } as any;
   public static values = Object.values(this.enum);
-  public static getLabel(value: number) {
-    return this.label[value] as any;
+  public static getLabel(value: number): string {
+    return this.label[value];
   }
-  public static getEtherPrice(value: number) {
-    return this.etherPrice[value] as any;
+  public static getEtherPrice(value: number): number {
+    return this.etherPrice[value];
   }
 }

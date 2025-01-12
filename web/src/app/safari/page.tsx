@@ -6,13 +6,22 @@ import { IPokemon, useStore } from "@/store";
 import { capitalizeFirstLetter } from "@/utils/capitalizeFirstLetter";
 import { contract } from "@/utils/constants";
 import { Pokeball } from "@/utils/enum/PokeBalls";
+import {
+  preparedPokemonCapturedEvent,
+  preparedPokemonEscapedEvent,
+  preparedPokemonSentToOakEvent,
+} from "@/utils/events";
 import { FormatPokemon } from "@/utils/formatPokemon";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
 import { LoadingBarContainer } from "react-top-loading-bar";
-import { useActiveAccount, useReadContract } from "thirdweb/react";
+import {
+  useActiveAccount,
+  useContractEvents,
+  useReadContract,
+} from "thirdweb/react";
 
 function SafariUI() {
   const [openPokeballModal, setOpenPokeballModal] = useState<boolean>(false);
@@ -68,6 +77,24 @@ function SafariUI() {
     params: [],
   });
 
+  const { data: pokemonCapturedEvent } = useContractEvents({
+    contract,
+    events: [preparedPokemonCapturedEvent],
+    enabled: store.enablePokemonCapturedEvent,
+  });
+
+  const { data: pokemonEscapedEvent } = useContractEvents({
+    contract,
+    events: [preparedPokemonEscapedEvent],
+    enabled: store.enablePokemonEscapedEvent,
+  });
+
+  const { data: pokemonSentToOakEvent } = useContractEvents({
+    contract,
+    events: [preparedPokemonSentToOakEvent],
+    enabled: store.enablePokemonSentToOakEvent,
+  });
+
   const selectTeamPokemon = (pokemon: IPokemon) => {
     store.setSelectedPokemon(pokemon);
     router.push("/team");
@@ -105,6 +132,21 @@ function SafariUI() {
       store.setOakPokemons(formattedPokemons);
     }
   }, [oakPokemons]);
+
+  useEffect(() => {
+    // console.log(new Set(pokemonCapturedEvent));
+    store.setEnablePokemonCapturedEvent(false);
+  }, [pokemonCapturedEvent]);
+
+  useEffect(() => {
+    // console.log(new Set(pokemonEscapedEvent));
+    store.setEnablePokemonEscapedEvent(false);
+  }, [pokemonEscapedEvent]);
+
+  useEffect(() => {
+    // console.log(pokemonSentToOakEvent);
+    store.setEnablePokemonSentToOakEvent(false);
+  }, [pokemonSentToOakEvent]);
 
   useEffect(() => {
     if (!account) router.push("/");

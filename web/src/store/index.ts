@@ -1,10 +1,14 @@
 import { create } from "zustand";
 
-export interface Move {
+export type IMove = {
   name: string;
-  moveType: string;
-}
-export interface IPokemon {
+  accuracy: number;
+  pp: number;
+  power: number;
+  type: string;
+};
+
+export type IPokemon = {
   name: string;
   nickname: string;
   url: string;
@@ -14,9 +18,9 @@ export interface IPokemon {
   weight: number;
   height: number;
   moves: string[];
-}
+};
 
-export interface INewPokemon {
+export type INewPokemon = {
   name: string;
   sprites: { front_default: string };
   moves: { move: { name: string } }[];
@@ -24,21 +28,27 @@ export interface INewPokemon {
   types: { type: { name: string } }[];
   weight: number;
   height: number;
-}
+};
 
-interface StoreVariables {
+type StoreVariables = {
   newPokemon: IPokemon | undefined;
   selectedPokemon: IPokemon | undefined;
   teamPokemons: IPokemon[];
   oakPokemons: IPokemon[];
 
+  moves: IMove[];
+
   refetchPokeball: number | undefined;
   refetchPokemons: "team" | "oak" | undefined;
 
   isLoading: boolean;
-}
 
-interface StoreActions {
+  enablePokemonCapturedEvent: boolean;
+  enablePokemonEscapedEvent: boolean;
+  enablePokemonSentToOakEvent: boolean;
+};
+
+type StoreActions = {
   setNewPokemon: (pokemon: IPokemon) => void;
   resetNewPokemon: () => void;
 
@@ -55,7 +65,11 @@ interface StoreActions {
   resetRefetchPokemons: () => void;
 
   setLoading: (val: boolean) => void;
-}
+
+  setEnablePokemonCapturedEvent: (val: boolean) => void;
+  setEnablePokemonEscapedEvent: (val: boolean) => void;
+  setEnablePokemonSentToOakEvent: (val: boolean) => void;
+};
 
 export const useStore = create<StoreVariables & StoreActions>((set) => ({
   newPokemon: undefined,
@@ -63,10 +77,16 @@ export const useStore = create<StoreVariables & StoreActions>((set) => ({
   teamPokemons: [],
   oakPokemons: [],
 
+  moves: [],
+
   refetchPokeball: undefined,
   refetchPokemons: undefined,
 
   isLoading: false,
+
+  enablePokemonCapturedEvent: true,
+  enablePokemonEscapedEvent: true,
+  enablePokemonSentToOakEvent: true,
 
   setNewPokemon: (pokemon: IPokemon) => set(() => ({ newPokemon: pokemon })),
   resetNewPokemon: () => set(() => ({ newPokemon: undefined })),
@@ -92,4 +112,11 @@ export const useStore = create<StoreVariables & StoreActions>((set) => ({
   resetRefetchPokemons: () => set(() => ({ refetchPokemons: undefined })),
 
   setLoading: (val: boolean) => set(() => ({ isLoading: val })),
+
+  setEnablePokemonCapturedEvent: (val: boolean) =>
+    set(() => ({ enablePokemonCapturedEvent: val })),
+  setEnablePokemonEscapedEvent: (val: boolean) =>
+    set(() => ({ enablePokemonEscapedEvent: val })),
+  setEnablePokemonSentToOakEvent: (val: boolean) =>
+    set(() => ({ enablePokemonSentToOakEvent: val })),
 }));

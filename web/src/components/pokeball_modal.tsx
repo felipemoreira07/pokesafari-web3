@@ -21,10 +21,10 @@ import { Pokeball } from "@/utils/enum/PokeBalls";
 import { sepolia } from "thirdweb/chains";
 import { toast } from "react-toastify";
 
-interface PokeballModalProps {
+type PokeballModalProps = {
   open: boolean;
   setOpen: (value: boolean) => void;
-}
+};
 
 const POKEBALL_PRICE = "0.001 ether";
 const GREATBALL_PRICE = "0.002 ether";
@@ -42,7 +42,6 @@ export default function PokeballModal(props: PokeballModalProps) {
     });
 
   const addPokeballs = async () => {
-    console.log(account);
     if (!account) return;
     store.setLoading(true);
     startLoadingBar();
@@ -58,13 +57,11 @@ export default function PokeballModal(props: PokeballModalProps) {
       transaction,
       account,
     });
-    console.log(transactionHash);
     const receipt = await waitForReceipt({
       chain: sepolia,
       client,
       transactionHash,
     });
-    console.log("receipt", receipt);
 
     if (receipt.status === "success") {
       toast.success(`${Pokeball.getLabel(pokeballType)} bought with success!!`);
@@ -73,8 +70,8 @@ export default function PokeballModal(props: PokeballModalProps) {
       toast.error("Pokeball purchase failed;");
     }
     store.setLoading(false);
-    completeLoadingBar();
     props.setOpen(false);
+    completeLoadingBar();
   };
 
   return (

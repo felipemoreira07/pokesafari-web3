@@ -32,9 +32,9 @@ contract PokeSafari {
     uint256 private constant GREATBALL_TYPE = 2;
     uint256 private constant ULTRABALL_TYPE = 3;
 
-    event PokemonCaptured(string pokemonName);
-    event PokemonEscaped(string pokemonName);
-    event PokemonSentToOak(string pokemonName);
+    event PokemonCaptured(string pokemonName, uint256 captured_at);
+    event PokemonEscaped(string pokemonName, uint256 escaped_at);
+    event PokemonSentToOak(string pokemonName, uint256 sent_at);
 
     function catchPokemon(
         string memory _name,
@@ -77,7 +77,7 @@ contract PokeSafari {
             (_pokeball_type == ULTRABALL_TYPE &&
                 _catch_accuracy < ULTRABALL_FAILURE_ACCURACY)
         ) {
-            emit PokemonEscaped(_name);
+            emit PokemonEscaped(_name, _captured_at);
             return;
         }
 
@@ -101,15 +101,18 @@ contract PokeSafari {
             newPokemon.moves[i] = _moves[i];
         }
 
-        emit PokemonCaptured(_name);
+        emit PokemonCaptured(_name, _captured_at);
     }
 
-    function sendPokemonToOak(uint256 _captured_at) public {
+    function sendPokemonToOak(
+        uint256 _pokemon_captured_at,
+        uint256 _timestamp
+    ) public {
         uint256 pokemonlength = pokemons.length;
 
         for (uint256 i = 0; i < pokemonlength; i++) {
             Pokemon storage pokemon = pokemons[i];
-            if (pokemon.captured_at == _captured_at) {
+            if (pokemon.captured_at == _pokemon_captured_at) {
                 Pokemon storage newPokemon = oak_pokemons.push();
                 newPokemon.name = pokemon.name;
                 newPokemon.nickname = pokemon.nickname;
@@ -133,7 +136,7 @@ contract PokeSafari {
                 }
 
                 pokemons.pop();
-                emit PokemonSentToOak(pokemon.name);
+                emit PokemonSentToOak(pokemon.name, _timestamp);
                 return;
             }
         }
